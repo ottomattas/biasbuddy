@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Glue Stack Layer of CloudFormation template for migrating data from oracle database to s3
+
+Parameters:
+  pGlueDBName:
+      Default: 'reddit_stream_glue_db'
+      Type: String
+      Description: Glue database name
+
+  pBucketName:
+        Type: String
+        Description: S3 destination bucket
+
+  pGlueTableRaw:
+        Default: 'raw_reddit_comments'
+        Type: String
+        Description: Glue raw data table
+
+Resources:
+
+  rGlueDatabase:
+    Type: "AWS::Glue::Database"
+    Properties:
+      DatabaseInput:
+        Name: !Ref pGlueDBName
+      CatalogId: !Ref AWS::AccountId
+
+  rGlueTableRaw:
+    Type: AWS::Glue::Table
+    Properties:
+      DatabaseName: !Ref rGlueDatabase
+      CatalogId: !Ref AWS::AccountId
+      TableInput:
+        Name: !Ref pGlueTableRaw
+        Parameters: { "classification" : "json" }
+        StorageDescriptor:
+          Location:
+            Fn::Join:
+                - ''
+                - - "s3://"
+                  - !Ref pBucketName
+                  - "/raw_reddit_comments/"
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          BucketColumns: []
+          SortColumns: []
+          SerdeInfo:
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+            Parameters:
+              serialization.format: '1'
+          StoredAsSubDirectories: false
+          Columns:
+            - {Name: comment_id, Type: string}
+            - {Name: subreddit, Type: string}
+            - {Name: comment_body, Type: string}
+            - {Name: comment_date, Type: string}
+            - {Name: comment_distinguished, Type: string}
+            - {Name: comment_is_submitter, Type: boolean}
+            - {Name: comment_tb_sentiment, Type: double}
+            - {Name: comment_is_censored, Type: int}
+            - {Name: author_name, Type: string}
+        PartitionKeys: []
+        TableType: EXTERNAL_TABLE
+
+Outputs:
+
+  oGlueDatabase:
+    Description: Database created for Glue
+    Value: !Ref rGlueDatabase
+    Export:
+      Name: !Sub "${AWS::StackName}-oGlueDatabase"
+
+  oGlueTableRaw:
+    Description: Table created for Glue
+    Value: !Ref rGlueTableRaw
+    Export:
+      Name: !Sub "${AWS::StackName}-oGlueTableRaw"
