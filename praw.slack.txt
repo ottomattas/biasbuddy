@@ -1,0 +1,74 @@
+
+Sunday, December 20th
+Otto  10:32 AM
+joined #discussion along with Jie Er Lu.
+
+Otto  2:45 PM
+Hello all! I come with an age-old question - how do I ingest all comments from subreddit X? As this question has seen some light but not concrete solution, I am asking it again.
+Also, I am a researcher not a coder so please bear with me. Any personal information (e.g Slack usernames etc) won’t be included in the research which will be open sourced and shared publicly.
+What have I investigated so far:
+I have seen Pushshift referred to a lot regarding larger data sets - the solution looks fun but is not highly available from the responses I’ve got (there are many timeouts and load handling seems unstable too). Also, publishing full datasets has died down. Also, they haven’t explained their method of collection well. Looks like this is becoming the legacy option.
+I have asked Reddit devs and still waiting for their response on direct approach. Best bet is they will give me a solid answer of needing to duplicate submission-comment structure for my purposes. This is something I would avoid but willing to consider if all else fails.
+I have investigated PRAW which currently holds most promise for me. I mean, it is actively developed, there are people to chat with on Slack. Heck, it’s a full Python package!
+
+PRAW moments:
+There is a subreddit comment streaming instance available already (https://praw.readthedocs.io/en/v7.1.0/code_overview/models/subreddit.html#praw.models.Subreddit.stream). This is great for ingesting new comments in real time.
+What do I do for the old ones, though?
+I found an old wikpage that defines ‘get_comments’ for a subreddit (https://praw.readthedocs.io/en/v3.0.0/pages/code_overview.html?highlight=get_comments#praw.objects.Subreddit.get_comments) which has since been removed. Or maybe moved into just a ‘comments’ (https://praw.readthedocs.io/en/v7.1.0/code_overview/models/subreddit.html#praw.models.Subreddit.comments).
+I have implemented the ‘comments’ object but seem to be running into a limit.
+So, to show a concrete example where it’s failing is here: https://github.com/ottomattas/analyzing-reddit-sentiment-with-aws/blob/b256b42da3e0f90980681489c25f242819d51a42/python-app/comment-archive.py#L63
+Alternatively, the streamer works nicely like this: https://github.com/ottomattas/analyzing-reddit-sentiment-with-aws/blob/b256b42da3e0f90980681489c25f242819d51a42/python-app/comment-stream.py#L63
+
+I would really appreciate any answer! Extra points go to anyone willing to extend the offered valid technical solution with some personal explanation. :slightly_smiling_face: I will be sharing this part in the research paper so an expert's explanation would be nice to have for reference. But not necessary in principle.
+(PS. Also, secondarily I'd be interested to find reasoning for this not being a relevant question in the first place. For example, explain why is there a streaming object for new items but not for archived old items? Wouldn't this streaming object for old items be useful for any kinds of analysis tasks and if not, why not? Maybe the infrastructure will have very high demands for resources so this object would not be relevant for the regular audience of PRAW? What is the regular audience of PRAW?)
+
+
+
+
+Lil_SpazJoekp  10:12 PM
+@Otto Welcome! Some of the issues you've come across are due to limitations of Reddit's API. More specifically, the majority of Reddit's listings (e.g., r/subreddit/hot or r/subreddit/comments in your case) are limited to 1000 items (what is in cache). What that means is you will only be able to fetch 1000 of the most recent comments from a subreddit. To get around this, your best bet is to use a 3rd party service like Pushshift. What you can do is use Pushshift to fetch all comments for a subreddit (that it has archived) and refetching them from Reddit. There are 2 options you have for refetching them:
+Using a package like PSAW to handle that for you
+Doing it manually with requests and PRAW's Reddit.info() method
+
+
+bboe  10:38 PM
+@Otto pushshift is definitely your best bet. They have a research-based reason to collect as many submissions and comments as possible. Of course, it's not perfect and here's why.
+10:41
+Pushshift uses a linear scan of the comment and submission space to find said items. As you may have noticed, items on reddit are simply monotonically increasing values (unless their centralized ID system has a hiccup). The values are base36 encoded (other than really old submissions/comments), but other than that one can simply enumerate the space by increasing the thing_id. (edited) 
+10:42
+Now if you take an arbitrary thing_id and look it up, it may or may not show up. Here are some of the reasons it might not show up:
+10:42
+1) It was posted to a private subreddit
+10:42
+2) It was flagged as spam
+10:42
+3) It was removed by the subreddit moderators (actually this might not matter) (edited) 
+10:42
+4) It was removed by its author
+10:43
+5) It was posted to a since deleted community
+10:43
+6) (I'm not sure of this one) it was posted to a quarantined subreddit and you haven't opted into said subreddits
+
+Lil_SpazJoekp  10:45 PM
+No problem!
+10:45
+They have bumped the id's before
+
+bboe  10:46 PM
+So pushshift does a pretty solid job of collecting as many items as it can by using this approach. While you can mimic it, it'd be better to help them improve if you think you can improve upon the process.
+10:47
+And yes, the thing ids have jumped before (and gone in reverse), but it's pretty easy to tell when that happens (now in real-time) if you also happen to monitor submission and comment streams for blips in the ID spaces.
+10:47
+For historical context, one use to be able to go back with no limit on submissions via /r/all/new. That has since been patched. (edited) 
+10:48
+Additionally, search previously could be used to enumerate all submissions based on time slices. That also has been removed. (edited) 
+
+Lil_SpazJoekp  10:49 PM
+Was it because they moved away from cloud search?
+
+bboe  10:49 PM
+Yes, it was when they changed search providers. I suspect they could have continued to index on date, but chose not to.
+
+Lil_SpazJoekp  10:59 PM
+Ah
