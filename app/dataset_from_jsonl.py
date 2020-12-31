@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Filippo Libardi
+# Filippo Libardi & Otto Mättas
 # This script will take JSON files and convert them to CSV files.
 import csv
 import os
