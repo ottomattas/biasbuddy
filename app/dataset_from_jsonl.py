@@ -1,3 +1,7 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# Filippo Libardi
+# This script will take JSON files and convert them to CSV files.
 import csv
 import os
 import json_lines
