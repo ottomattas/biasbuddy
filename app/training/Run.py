@@ -11,8 +11,10 @@ from BiasCalculator import BiasModel
 # outputpath = 'Models/million_the_donald'
 
 # For debug
-csvpath = '"D:\\Downloads\\politics.corpus\\utterances_toy.jsonl"'
-outputpath = 'Models\\odahnfv'
+#csvpath = '"D:\\Downloads\\politics.corpus\\utterances_toy.jsonl"'
+csvpath = '~/PoliticsFinal.csv'
+#outputpath = 'Models\\odahnfv'
+outputpath = '~/PoliticsModel'
 
 # %%
 '''
