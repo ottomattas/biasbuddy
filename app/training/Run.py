@@ -30,7 +30,7 @@ model.train(doc, 5)
 # %%
 '''
 Find biased words
-'''
+
 print()
 mexican = ["mexican", "mexico", "hispanic", "immigrant", "brown"]
 american = ["american", "america", "white", "caucasian", "yankee"]
@@ -187,3 +187,4 @@ drop_columns = transposed_df.sum()[half_elements:]
 drop_columns_lbl = [lbl for lbl in drop_columns.index]
 transposed_df.drop(labels=drop_columns_lbl, axis=1, inplace=True)
 transposed_df.to_csv("Datasets/daily_important_sex_pos.csv")
+'''
