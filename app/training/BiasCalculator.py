@@ -27,7 +27,7 @@ class EpochLogger(CallbackAny2Vec):
             self.single_epoch_time = time.time()
         else:
             if self.epoch != self.tot_epochs:
-                print(f"Finished epoch {self.epoch - 1} in {time.time() - self.single_epoch_time}")
+                print(f"Finished epoch {self.epoch} in {time.time() - self.single_epoch_time}")
                 self.single_epoch_time = time.time()
             else:
                 print(f"Training finished in {time.time() - self.starttime}s")
@@ -60,34 +60,7 @@ class BiasModel:
     def get_cosine_distance(embedding1, embedding2):
         return spatial.distance.cosine(embedding1, embedding2)
 
-    def load_json_and_preprocess(self, nrowss=None, lemmatise=False):
-        """
-        input:
-        nrowss <int> : number of rows to process, leave None if all
-        tolower <True/False> : transform all text to lowercase
-        returns:
-        List of preprocessed sentences, i.e. the input to train
-        """
-        print(f"Processing document: {self.comments_document}")
-
-        trpCom = pd.read_json(self.comments_document)
-        trpCom.fillna(0)
-        documents = []
-        for i, row in enumerate(trpCom[self.comment_column]):
-            if i % 100000 == 0:
-                print(f'Processing line {i}')
-            try:
-                pp = gensim.utils.simple_preprocess(row)
-                if lemmatise:
-                    pp = [wordnet_lemmatizer.lemmatize(w, pos="n") for w in pp]
-                documents.append(pp)
-            except TypeError:
-                print(f'Row {i} threw a type error.')
-
-        print('Done reading all documents')
-        return documents
-
-    def load_csv_and_preprocess(self, nrowss=None, lemmatise=False):
+    def load_csv_and_preprocess(self, path, nrowss=None, lemmatise=False):
         """
         input:
         nrowss <int> : number of rows to process, leave None if all
@@ -99,22 +72,25 @@ class BiasModel:
         trpCom = pd.read_csv(self.comments_document, lineterminator='\n', nrows=nrowss)
         trpCom.fillna(0)
         documents = []
-        for i, row in enumerate(trpCom[self.comment_column]):
-
-            if i % 100000 == 0:
-                print(f'Processing line {i}')
-            try:
-                pp = gensim.utils.simple_preprocess(row)
-                if lemmatise:
-                    pp = [wordnet_lemmatizer.lemmatize(w, pos="n") for w in pp]
-                documents.append(pp)
-            except TypeError:
-                print(f'Row {i} threw a type error.')
-
-        print('Done reading all documents')
+        with open(path, 'a', encoding='utf-8') as file:
+            for i, row in enumerate(trpCom[self.comment_column]):
+                if i % 500000 == 0:
+                    print(f'Processing line {i}')
+                    for word in documents:
+                        file.write("%s\n" % word)
+                    documents = []
+                try:
+                    pp = gensim.utils.simple_preprocess(row)
+                    if lemmatise:
+                        pp = [wordnet_lemmatizer.lemmatize(w, pos="n") for w in pp]
+                    documents.append(pp)
+                except TypeError:
+                    print(f'Row {i} threw a type error.')
+        file.close()
+        print(f'Wrote corpus to file: {path}.')
         return documents
 
-    def train(self, documents, epochs):
+    def train(self, path_to_file, epochs):
         """
         documents list<str> : List of texts preprocessed
         outputfile <str> : final file will be saved in this path
@@ -125,14 +101,24 @@ class BiasModel:
         """
 
         epoch_logger = EpochLogger()
+        n_words, n_sentences = self.file_len(path_to_file)
         print(f'Started training model {self.output_name}:\n\tDimensions:{self.out_dimension}, '
               f'\n\tMinimum word frequency:{self.min_frequency} \n\tEpochs:{epochs}')
-        model = gensim.models.Word2Vec(documents, size=self.out_dimension, window=self.window,
+        model = gensim.models.Word2Vec(corpus_file=path_to_file, size=self.out_dimension, window=self.window,
                                        min_count=self.min_frequency,
                                        workers=5, callbacks=[epoch_logger])
-        model.train(documents, total_examples=len(documents), epochs=epochs)
+        model.train(corpus_file=path_to_file, total_examples=n_sentences, word_count=n_words, epochs=epochs,
+                    total_words=n_words)
         model.save(self.output_name)
         print(f'\nModel saved in {self.output_name}')
+
+    @staticmethod
+    def file_len(fname):
+        w = []
+        with open(fname, encoding="utf-8") as f:
+            for i, l in enumerate(f):
+                w.append(len(l))
+        return np.sum(w), (i + 1)
 
     def get_top_most_biased_words(self, topk, c1, c2, pos=None):
         """

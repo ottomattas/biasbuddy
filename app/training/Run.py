@@ -24,8 +24,9 @@ Train new model
 # DADDBias_ICWSM.TrainModel(csvpath, outputname=outputpath, epochs=5)
 # print('Training finished, saved ', outputpath)
 model = BiasModel(csvpath, output_name=outputpath)
-doc = model.load_csv_and_preprocess()
-model.train(doc, 5)
+filename = "lines.txt"
+doc = model.load_csv_and_preprocess(filename)
+model.train(filename, 5)
 
 # %%
 '''
