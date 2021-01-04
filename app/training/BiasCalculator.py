@@ -93,7 +93,7 @@ class BiasModel:
         return documents
 
     def stream_load_csv_and_preprocess(self, csv_in, csv_out, corpus_out, subsample=False, fraction=None):
-        if subsample and fractionn is None:
+        if subsample and fraction is None:
             print("If subsampling is enabled a fraction must be specified.")
             return
         f_in = open(csv_in, encoding="utf-8")
