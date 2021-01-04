@@ -1,10 +1,10 @@
 import time
 import csv
-import datetime
 import gensim
 import nltk
 import numpy as np
 import pandas as pd
+from datetime import datetime
 from gensim.models import Word2Vec
 from gensim.models.callbacks import CallbackAny2Vec
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
