@@ -1,7 +1,7 @@
 # %%
 
 from BiasCalculator import BiasModel
-import urllib.request as urllib2
+#import urllib.request as urllib2
 
 # %%
 # csvpath = 'Datasets/comments_small.csv'
@@ -20,7 +20,7 @@ Train new model
 # print('Training finished, saved ', outputpath)
 # url = 'https://biasbuddy-archive-eu.s3.eu-central-1.amazonaws.com/politics_csv/PoliticsFinal.csv'
 # response = urllib2.urlopen(url)
-model = BiasModel(url, output_name="PoliticsFinalModel")
+model = BiasModel("PoliticsFinal.csv", output_name="PoliticsFinalModel")
 model.stream_load_csv_and_preprocess("PoliticsFinal.csv", "", "PoliticsFinalCorpus.txt")
 model.train("PoliticsFinalCorpus.txt", 5)
 
