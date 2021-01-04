@@ -20,9 +20,9 @@ Train new model
 # print('Training finished, saved ', outputpath)
 # url = 'https://biasbuddy-archive-eu.s3.eu-central-1.amazonaws.com/politics_csv/PoliticsFinal.csv'
 # response = urllib2.urlopen(url)
-model = BiasModel("PoliticsFinal.csv", output_name="PoliticsFinalModel")
-model.stream_load_csv_and_preprocess("PoliticsFinal.csv", "", "PoliticsFinalCorpus.txt")
-model.train("PoliticsFinalCorpus.txt", 5)
+model = BiasModel("/home/ec2-user/Datasets/PoliticsFinal.csv", output_name="/home/ec2-user/Models/PoliticsFinalModel")
+model.stream_load_csv_and_preprocess("/home/ec2-user/Datasets/PoliticsFinal.csv", "", "/home/ec2-user/Models/PoliticsFinalCorpus.txt")
+model.train("/home/ec2-user/Models/PoliticsFinalCorpus.txt", 5)
 
 # %%
 '''
