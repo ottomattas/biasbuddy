@@ -7,8 +7,8 @@ import urllib2
 # outputpath = 'Models/million_the_donald'
 
 # For debug
-csvpath = 'Datasets/PoliticsFinal.csv'
-outputpath = 'Models/politics_model'
+csvpath = '/home/ec2-user/Datasets/PoliticsFinal.csv'
+outputpath = '/home/ec2-user/Models/politics_model'
 
 # %%
 '''
