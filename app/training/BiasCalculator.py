@@ -9,6 +9,7 @@ from gensim.models.callbacks import CallbackAny2Vec
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from progress.bar import Bar
 from scipy import spatial
+from tqdm import tqdm
 
 
 class EpochLogger(CallbackAny2Vec):
@@ -19,7 +20,8 @@ class EpochLogger(CallbackAny2Vec):
         self.single_epoch_time = 0
 
     def on_epoch_begin(self, model):
-        print(f"Started epoch {self.epoch}.")
+        if self.epoch != 0:
+            print(f"Started epoch {self.epoch}.")
 
     def on_epoch_end(self, model):
         if self.epoch == 0:
@@ -89,6 +91,48 @@ class BiasModel:
         file.close()
         print(f'Wrote corpus to file: {path}.')
         return documents
+
+    def stream_load_csv_and_preprocess(self, csv_in, csv_out, corpus_out, subsample=False, fraction=None):
+        if subsample and fractionn is None:
+            print("If subsampling is enabled a fraction must be specified.")
+            return
+        f_in = open(csv_in, encoding="utf-8")
+        reader = csv.DictReader(f_in)
+
+        tmp_df = pd.DataFrame()
+
+        previous_day = datetime.fromtimestamp(0)
+        with open(corpus_out, 'a', encoding='utf-8') as file:
+            for row in tqdm(reader):
+                mask = [True if val is not None and val != "" else False for val in row.values()]
+                if not all(mask):
+                    print("Empty value in row.")
+                    continue
+                next_day = datetime.fromtimestamp(int(row["created"])).date()
+
+                row["body"] = ' '.join(w for w in gensim.utils.simple_preprocess(row["body"]))
+
+                if previous_day != next_day and not tmp_df.empty:
+                    tmp_df["created"] = pd.to_datetime(tmp_df["created"], unit='s').dt.date.astype('datetime64')
+                    tmp_df.sort_values(by="created", inplace=True)
+                    if subsample:
+                        tmp_df = tmp_df.sample(frac=fraction)
+
+                    for comment in tmp_df['body'].tolist():
+                        file.write("%s\n" % comment)
+                    if subsample:
+                        if os.path.isfile(csv_out):
+                            tmp_df.to_csv(csv_out, mode='a', header=False, encoding='utf-8', index=False)
+                        else:
+                            tmp_df.to_csv(csv_out, encoding='utf-8', index=False)
+
+                    tmp_df = pd.DataFrame()
+
+                tmp_df = tmp_df.append(row, ignore_index=True)
+
+                previous_day = next_day
+
+            file.close()
 
     def train(self, path_to_file, epochs):
         """

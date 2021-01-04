@@ -1,20 +1,14 @@
 # %%
-from collections import defaultdict
-
-import numpy as np
-import pandas as pd
 
 from BiasCalculator import BiasModel
-
+import urllib2
 # %%
 # csvpath = 'Datasets/comments_small.csv'
 # outputpath = 'Models/million_the_donald'
 
 # For debug
-#csvpath = '"D:\\Downloads\\politics.corpus\\utterances_toy.jsonl"'
-csvpath = '~/PoliticsFinal.csv'
-#outputpath = 'Models\\odahnfv'
-outputpath = '~/PoliticsModel'
+csvpath = 'Datasets/PoliticsFinal.csv'
+outputpath = 'Models/politics_model'
 
 # %%
 '''
@@ -23,10 +17,11 @@ Train new model
 # print('Training new model', csvpath)
 # DADDBias_ICWSM.TrainModel(csvpath, outputname=outputpath, epochs=5)
 # print('Training finished, saved ', outputpath)
-model = BiasModel(csvpath, output_name=outputpath)
-filename = "lines.txt"
-doc = model.load_csv_and_preprocess(filename)
-model.train(filename, 5)
+# url = 'https://biasbuddy-archive-eu.s3.eu-central-1.amazonaws.com/politics_csv/PoliticsFinal.csv'
+# response = urllib2.urlopen(url)
+model = BiasModel(url, output_name="PoliticsFinalModel")
+model.stream_load_csv_and_preprocess("PoliticsFinal.csv", "", "PoliticsFinalCorpus.txt")
+model.train("PoliticsFinalCorpus.txt", 5)
 
 # %%
 '''
