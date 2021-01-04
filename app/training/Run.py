@@ -1,7 +1,8 @@
 # %%
 
 from BiasCalculator import BiasModel
-import urllib2
+import urllib.request as urllib2
+
 # %%
 # csvpath = 'Datasets/comments_small.csv'
 # outputpath = 'Models/million_the_donald'
