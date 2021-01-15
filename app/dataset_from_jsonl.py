@@ -35,3 +35,4 @@ for idx,filepath in enumerate(os.listdir(dirs)):
         print(f"Done processing {len(small_dic_list)} comments.")
         dict2csv(small_dic_list, f"Dataset/PoliticsBig_{idx}.csv")
         print(f"Finished {idx}.")
+
